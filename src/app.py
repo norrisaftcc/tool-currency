@@ -21,6 +21,10 @@ from src.currency_utils import (
     convert_currency
 )
 
+# Initialize session state for theme preference
+if "theme" not in st.session_state:
+    st.session_state.theme = "retro"  # Default to retro theme
+
 # Set page configuration with meaningful title and layout
 st.set_page_config(
     page_title="RetroComputer 8000 - Currency Converter",
@@ -29,7 +33,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-def apply_terminal_style():
+def apply_retro_style():
     """
     Apply retro-themed styling with VT323 font and green-on-black theme.
     
@@ -259,25 +263,248 @@ def apply_terminal_style():
         background-color: #004400;
         box-shadow: 0 0 5px #33ff33;
     }
+    
+    /* Theme toggle switch */
+    .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    .toggle-label {
+        display: inline-block;
+        margin-right: 10px;
+        font-family: 'VT323', monospace;
+        color: #33ff33;
+        font-size: 16px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
+def apply_standard_style():
+    """
+    Apply a clean, professional standard theme styling.
+    Uses a light color scheme with modern UI elements.
+    """
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
+    
+    /* Global modern styling */
+    .main {
+        background-color: #f8f9fa;
+        color: #212529;
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    /* Main container styling */
+    .block-container {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+        max-width: 1000px !important;
+        background-color: #ffffff;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-family: 'Roboto', sans-serif;
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+    }
+    
+    .stButton>button:hover {
+        background-color: #0b5ed7;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Text inputs */
+    .stTextInput>div>div>input, .stNumberInput>div>div>input {
+        background-color: #ffffff;
+        color: #212529;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-family: 'Roboto', sans-serif;
+        padding: 10px;
+    }
+    
+    /* Dialog text box styling */
+    .dialog-text {
+        background-color: #f8f9fa;
+        color: #212529;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        font-family: 'Roboto', sans-serif;
+        margin-bottom: 20px;
+        font-size: 16px;
+        position: relative;
+        border-radius: 8px;
+    }
+    
+    .dialog-header {
+        color: #0d6efd;
+        margin-bottom: 10px;
+        font-weight: 500;
+        font-size: 18px;
+    }
+    
+    /* Header */
+    .standard-header {
+        padding: 20px;
+        margin-bottom: 30px;
+        text-align: center;
+        background-color: #ffffff;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    /* For select boxes */
+    .stSelectbox>div>div>div {
+        background-color: #ffffff !important;
+        color: #212529 !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 4px !important;
+    }
+    
+    /* System stats display */
+    .system-stats {
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+        margin-top: 20px;
+        padding-top: 10px;
+    }
+    
+    /* Result box */
+    .result-box {
+        background-color: #e9ecef;
+        color: #212529;
+        border: 1px solid #dee2e6;
+        padding: 20px;
+        margin: 20px 0;
+        font-family: 'Roboto', sans-serif;
+        font-size: 18px;
+        text-align: center;
+        border-radius: 8px;
+    }
+    
+    /* Chart container */
+    .chart-container {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    
+    /* Table wrapper */
+    .table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    /* Currency table */
+    .currency-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Roboto', sans-serif;
+        font-size: 14px;
+        margin-top: 20px;
+        table-layout: fixed;
+        overflow: hidden;
+    }
+    
+    .currency-table th, .currency-table td {
+        border: 1px solid #dee2e6;
+        padding: 8px;
+        text-align: left;
+        background-color: #ffffff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .currency-table th {
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        font-weight: 500;
+    }
+    
+    .currency-table tr:hover {
+        background-color: #f1f3f5;
+    }
+    
+    .currency-table tr:hover td {
+        background-color: #f1f3f5;
+    }
+    
+    /* Theme toggle switch */
+    .theme-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    .toggle-label {
+        display: inline-block;
+        margin-right: 10px;
+        font-family: 'Roboto', sans-serif;
+        color: #212529;
+        font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def apply_theme_style():
+    """Apply styling based on the current theme setting"""
+    if st.session_state.theme == "retro":
+        apply_retro_style()
+    else:
+        apply_standard_style()
+
 def display_system_info():
     """
-    Display a retro-styled system information box with current date and time.
+    Display a system information box with current date and time.
+    Style depends on the current theme setting.
     
     Returns:
-        str: Formatted ASCII art box with system information
+        str: Formatted system information
     """
     now = datetime.now()
     
-    system_info = f"""
-    ╔═══════════════════════════════════════════════════╗
-    ║ RETRO-COMPUTER 8000 | CURRENCY v1.0               ║
-    ║ DATE: {now.strftime('%Y-%m-%d')} | TIME: {now.strftime('%H:%M:%S')} ║
-    ║ MEMORY: 64K RAM SYSTEM  38911 BASIC BYTES FREE    ║
-    ╚═══════════════════════════════════════════════════╝
-    """
+    if st.session_state.theme == "retro":
+        # Retro-styled ASCII art box
+        system_info = f"""
+        ╔═══════════════════════════════════════════════════╗
+        ║ RETRO-COMPUTER 8000 | CURRENCY v1.0               ║
+        ║ DATE: {now.strftime('%Y-%m-%d')} | TIME: {now.strftime('%H:%M:%S')} ║
+        ║ MEMORY: 64K RAM SYSTEM  38911 BASIC BYTES FREE    ║
+        ╚═══════════════════════════════════════════════════╝
+        """
+    else:
+        # Modern info display
+        system_info = f"""
+        Currency Converter v1.0
+        Date: {now.strftime('%Y-%m-%d')} | Time: {now.strftime('%H:%M:%S')}
+        © 2025 Modern Systems Inc.
+        """
     
     return system_info
 
@@ -376,24 +603,47 @@ def create_rates_table(rates, currency_codes):
     """
     return table_html
 
+def toggle_theme():
+    """Toggle between retro and standard themes"""
+    if st.session_state.theme == "retro":
+        st.session_state.theme = "standard"
+    else:
+        st.session_state.theme = "retro"
+    st.rerun()  # Rerun the app to apply the new theme
+
 def main():
     """
     Main application function that sets up the Streamlit interface and handles user interactions.
     """
-    # Apply styling
-    apply_terminal_style()
+    # Apply styling based on current theme
+    apply_theme_style()
     
     # Initialize session state for conversion history
     if "conversion_history" not in st.session_state:
         st.session_state.conversion_history = []
     
-    # Terminal header with retro styling
-    st.markdown("""
-    <div class='retro-header'>
-        <h1 class='title-neon' style='color: #33ff33; font-size: 36px;'>CURRENCY CONVERTER v1.0</h1>
-        <p style='color: #33ff33; font-size: 20px;'>INTERNATIONAL TRADING SYSTEM</p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Theme toggle
+    col_toggle, col_spacer = st.columns([1, 5])
+    with col_toggle:
+        theme_label = "🌙 Retro" if st.session_state.theme == "retro" else "☀️ Standard"
+        if st.button(f"Switch to {theme_label}", key="theme_toggle"):
+            toggle_theme()
+    
+    # Header with styling based on theme
+    if st.session_state.theme == "retro":
+        st.markdown("""
+        <div class='retro-header'>
+            <h1 class='title-neon' style='color: #33ff33; font-size: 36px;'>CURRENCY CONVERTER v1.0</h1>
+            <p style='color: #33ff33; font-size: 20px;'>INTERNATIONAL TRADING SYSTEM</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class='standard-header'>
+            <h1 style='color: #0d6efd; font-size: 32px;'>Currency Converter</h1>
+            <p style='color: #6c757d; font-size: 18px;'>International Currency Exchange Tool</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Get all available currencies - do this once at the beginning
     currency_codes = get_currency_codes()
@@ -506,17 +756,29 @@ def main():
             st.markdown("</div>", unsafe_allow_html=True)
             
             # System information display
-            st.markdown(f"<pre style='color: #33ff33; font-family: VT323, monospace;'>{display_system_info()}</pre>", unsafe_allow_html=True)
+            if st.session_state.theme == "retro":
+                st.markdown(f"<pre style='color: #33ff33; font-family: VT323, monospace;'>{display_system_info()}</pre>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<div style='color: #6c757d; font-family: Roboto, sans-serif; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;'>{display_system_info()}</div>", unsafe_allow_html=True)
             
-            # Add a retro "system stats" footer
-            st.markdown("""
-            <div class="system-stats">
-                <p>SYSTEM PERFORMANCE: NOMINAL</p>
-                <p>EXCHANGE DATA: ONLINE</p>
-                <p>CONNECTION: SECURE</p>
-                <p>(C) RETRO SYSTEMS INC. 2025</p>
-            </div>
-            """, unsafe_allow_html=True)
+            # Theme-appropriate footer
+            if st.session_state.theme == "retro":
+                st.markdown("""
+                <div class="system-stats">
+                    <p>SYSTEM PERFORMANCE: NOMINAL</p>
+                    <p>EXCHANGE DATA: ONLINE</p>
+                    <p>CONNECTION: SECURE</p>
+                    <p>(C) RETRO SYSTEMS INC. 2025</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div class="system-stats">
+                    <p>System Status: Online</p>
+                    <p>Data Source: Open Exchange Rates API</p>
+                    <p>© 2025 Modern Systems Inc.</p>
+                </div>
+                """, unsafe_allow_html=True)
             
         except Exception as error:
             # Handle any unexpected errors in the sidebar
