@@ -2,3 +2,4 @@
 .DS_Store
 
 **/.claude/settings.local.json
+/src/__pycache__
