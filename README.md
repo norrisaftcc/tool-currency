@@ -79,6 +79,28 @@ If you encounter any issues:
 - The application requires only basic libraries for maximum compatibility
 - For ARM-based systems, this version has been specifically optimized to avoid dependency issues
 
+## Version History
+
+- **v1.3 (Current)** - Significant code quality and robustness improvements:
+  - Added comprehensive documentation and docstrings
+  - Implemented caching for better performance
+  - Enhanced error handling and security features
+  - Improved startup scripts with better environment detection
+
+- **v1.2** - Simplified dependencies for ARM compatibility:
+  - Removed pandas dependency for improved compatibility
+  - Added native HTML table generation
+  - Reduced external library dependencies
+
+- **v1.1** - Added presentation mode:
+  - Created HTML presentation view
+  - Added project structure documentation
+
+- **v1.0** - Initial release:
+  - Basic currency conversion functionality
+  - Retro terminal styling
+  - Exchange rate display
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
