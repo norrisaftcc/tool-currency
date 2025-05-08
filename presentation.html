@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool-Currency Project Presentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #33ff33;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 2px solid #33ff33;
+            box-shadow: 0 0 10px #33ff33;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Scanline effect */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                transparent 0px,
+                transparent 2px,
+                rgba(0, 0, 0, 0.3) 3px,
+                rgba(0, 0, 0, 0.3) 3px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed #33ff33;
+            padding-bottom: 20px;
+        }
+        
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 48px;
+            color: #33ff33;
+            text-shadow: 0 0 10px #33ff33;
+            margin-bottom: 10px;
+            animation: neon-flicker 3s infinite alternate;
+        }
+        
+        @keyframes neon-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+            }
+        }
+        
+        h2 {
+            font-family: 'VT323', monospace;
+            color: #33ffff;
+            font-size: 32px;
+            border-bottom: 1px solid #33ff33;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            font-family: 'VT323', monospace;
+            color: #ffff33;
+            font-size: 24px;
+        }
+        
+        .student-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #33ff33;
+            position: relative;
+        }
+        
+        .student-a {
+            background-color: rgba(0, 100, 0, 0.2);
+            border-color: #33ff33;
+        }
+        
+        .student-b {
+            background-color: rgba(0, 0, 100, 0.2);
+            border-color: #33ffff;
+        }
+        
+        .student-label {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background-color: #000;
+            padding: 5px 15px;
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+        }
+        
+        .student-a .student-label {
+            color: #33ff33;
+            border: 1px solid #33ff33;
+        }
+        
+        .student-b .student-label {
+            color: #33ffff;
+            border: 1px solid #33ffff;
+        }
+        
+        pre {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid #33ff33;
+            overflow-x: auto;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        
+        .student-b pre {
+            border-color: #33ffff;
+        }
+        
+        code {
+            font-family: 'Share Tech Mono', monospace;
+            color: #ffffff;
+        }
+        
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #33ff33;
+            margin: 20px 0;
+            box-shadow: 0 0 10px rgba(51, 255, 51, 0.5);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            border-top: 1px dashed #33ff33;
+            padding-top: 20px;
+        }
+        
+        .code-comparison {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .code-column {
+            flex: 1;
+            padding: 10px;
+        }
+        
+        .code-column pre {
+            height: 300px;
+            overflow-y: auto;
+        }
+        
+        .terminal {
+            background-color: #000;
+            border: 2px solid #33ff33;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'VT323', monospace;
+            color: #33ff33;
+            box-shadow: 0 0 10px rgba(51, 255, 51, 0.5);
+        }
+        
+        .terminal p {
+            margin: 5px 0;
+        }
+        
+        .terminal .command {
+            color: #ffff33;
+        }
+        
+        .terminal .output {
+            color: #33ff33;
+        }
+        
+        .terminal .error {
+            color: #ff3333;
+        }
+        
+        .highlight {
+            background-color: rgba(51, 255, 51, 0.2);
+            padding: 2px 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TOOL-CURRENCY PROJECT</h1>
+            <p>A retro-themed currency converter with nostalgic 80s terminal interface</p>
+            <p>Presented by Student A & Student B</p>
+        </header>
+        
+        <h2>Project Overview</h2>
+        <p>Tool-Currency is a Streamlit GUI application that allows users to convert between a dozen major global currencies. The application features a retro-styled terminal interface reminiscent of 80s computing systems, complete with glowing green text, scanline effects, and a nostalgic aesthetic.</p>
+        
+        <h2>Project Architecture</h2>
+        <p>Our application follows a clean separation of concerns:</p>
+        
+        <div class="code-comparison">
+            <div class="code-column student-a">
+                <div class="student-label">Student A</div>
+                <h3>Backend & Data Management</h3>
+                <ul>
+                    <li>Currency data structure</li>
+                    <li>Exchange rate API integration</li>
+                    <li>Currency conversion logic</li>
+                    <li>Data fallback mechanisms</li>
+                </ul>
+            </div>
+            
+            <div class="code-column student-b">
+                <div class="student-label">Student B</div>
+                <h3>Frontend & User Experience</h3>
+                <ul>
+                    <li>Streamlit GUI implementation</li>
+                    <li>Retro terminal styling</li>
+                    <li>User interaction flows</li>
+                    <li>Visual history tracking</li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2>Student Contributions</h2>
+        
+        <div class="student-section student-a">
+            <div class="student-label">Student A: Backend Systems</div>
+            
+            <h3>Currency Data Management</h3>
+            <p>I created the currency data structure in JSON format to store information about each supported currency:</p>
+            
+            <pre><code>{
+  "currencies": [
+    {
+      "code": "USD",
+      "name": "US Dollar",
+      "symbol": "$"
+    },
+    {
+      "code": "EUR",
+      "name": "Euro",
+      "symbol": "€"
+    },
+    // More currencies...
+  ]
+}</code></pre>
+            
+            <h3>Currency Utilities</h3>
+            <p>I developed the core currency utilities module to handle all data loading and conversion operations:</p>
+            
+            <pre><code># Key functions implemented:
+def load_currencies():
+    # Loads currency data from JSON file
+    
+def get_currency_codes():
+    # Returns list of all currency codes
+    
+def get_currency_name(code):
+    # Looks up full name for a currency code
+    
+def get_currency_symbol(code):
+    # Gets the symbol for a currency
+    
+def get_exchange_rates(base_currency="USD"):
+    # Fetches real-time exchange rates from API
+    # Falls back to sample data if API is unavailable
+    
+def convert_currency(amount, from_currency, to_currency):
+    # Performs the actual currency conversion
+</code></pre>
+            
+            <h3>API Integration</h3>
+            <p>I implemented integration with the Open Exchange Rates API to provide real-time exchange rates:</p>
+            
+            <pre><code># Real-time exchange rate fetching
+def get_exchange_rates(base_currency="USD"):
+    try:
+        response = requests.get(f"https://open.er-api.com/v6/latest/{base_currency}")
+        data = response.json()
+        
+        if data.get('result') == 'success':
+            return data['rates'], data['time_last_update_utc']
+        else:
+            # Fallback to sample data if API call fails
+            return get_sample_exchange_rates(base_currency), datetime.now().strftime(...)
+    except Exception:
+        # Fallback to sample data if API call fails
+        return get_sample_exchange_rates(base_currency), datetime.now().strftime(...)</code></pre>
+            
+            <h3>Fallback Mechanism</h3>
+            <p>I created a robust fallback system to ensure the application works even without internet connectivity:</p>
+            
+            <pre><code># Sample exchange rates as a fallback
+def get_sample_exchange_rates(base_currency="USD"):
+    # Sample exchange rates (as of May 2025)
+    base_rates = {
+        "USD": 1.0,
+        "EUR": 0.93,
+        "GBP": 0.79,
+        "JPY": 154.56,
+        # Additional currencies...
+    }
+    
+    # Recalculate all rates if base currency is not USD
+    if base_currency != "USD":
+        base_value = base_rates[base_currency]
+        converted_rates = {}
+        
+        for currency, rate in base_rates.items():
+            converted_rates[currency] = rate / base_value
+            
+        return converted_rates
+    
+    return base_rates</code></pre>
+        </div>
+        
+        <div class="student-section student-b">
+            <div class="student-label">Student B: Frontend & UX</div>
+            
+            <h3>Retro Terminal Interface</h3>
+            <p>I designed and implemented the nostalgic 80s terminal interface using custom CSS styling:</p>
+            
+            <pre><code># Apply the retro styling with VT323 font and green-on-black theme
+def apply_terminal_style():
+    # CSS for enhanced 80s retro terminal look
+    st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+    
+    /* Global retro styling */
+    .main {
+        background-color: #000;
+        color: #33ff33;
+        font-family: 'VT323', monospace;
+    }
+    
+    /* Main container styling with terminal border */
+    .block-container {
+        border: 2px solid #33ff33;
+        border-radius: 5px;
+        padding: 20px;
+        box-shadow: 0 0 10px #33ff33;
+        max-width: 1000px !important;
+    }
+    
+    /* More styling... */
+    
+    /* Neon flicker animation for the title */
+    .title-neon {
+        animation: neon-flicker 3s infinite alternate;
+        text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33;
+    }
+    
+    @keyframes neon-flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+            text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33;
+        }
+        20%, 24%, 55% {
+            text-shadow: none;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)</code></pre>
+            
+            <h3>User Interface Layout</h3>
+            <p>I designed the application layout with clear sections for currency conversion and rate display:</p>
+            
+            <pre><code># Terminal header with retro styling
+st.markdown("""
+<div class='retro-header'>
+    <h1 class='title-neon' style='color: #33ff33; font-size: 36px;'>CURRENCY CONVERTER v1.0</h1>
+    <p style='color: #33ff33; font-size: 20px;'>INTERNATIONAL TRADING SYSTEM</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Main content area
+col1, col2 = st.columns([2, 1])
+
+# Currency converter section
+with col1:
+    st.markdown("<h2 style='color: #33ff33;'>CURRENCY EXCHANGE TERMINAL</h2>", unsafe_allow_html=True)
+    
+    # Get all available currencies
+    currency_codes = get_currency_codes()
+    
+    # Input for amount
+    amount = st.number_input("ENTER AMOUNT:", min_value=0.01, value=100.00, step=10.0)
+    
+    # Select boxes for currencies
+    col1a, col1b = st.columns(2)
+    with col1a:
+        from_currency = st.selectbox("FROM CURRENCY:", currency_codes, index=0)
+    with col1b:
+        to_currency = st.selectbox("TO CURRENCY:", currency_codes, index=1)</code></pre>
+            
+            <h3>System Information Display</h3>
+            <p>I created retro-styled system information displays to enhance the terminal aesthetic:</p>
+            
+            <pre><code># Function to display system date and time
+def display_system_info():
+    now = datetime.now()
+    
+    system_info = f"""
+    ╔═══════════════════════════════════════════════════╗
+    ║ RETRO-COMPUTER 8000 | CURRENCY v1.0               ║
+    ║ DATE: {now.strftime('%Y-%m-%d')} | TIME: {now.strftime('%H:%M:%S')} ║
+    ║ MEMORY: 64K RAM SYSTEM  38911 BASIC BYTES FREE    ║
+    ╚═══════════════════════════════════════════════════╝
+    """
+    
+    return system_info</code></pre>
+            
+            <h3>Conversion History Tracking</h3>
+            <p>I implemented a history tracking system to record all currency conversions:</p>
+            
+            <pre><code># Initialize session state for conversion history
+if "conversion_history" not in st.session_state:
+    st.session_state.conversion_history = []
+
+# Add to conversion history when a conversion is performed
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+st.session_state.conversion_history.append({
+    "timestamp": timestamp,
+    "from_currency": from_currency,
+    "to_currency": to_currency,
+    "amount": amount,
+    "result": result
+})
+
+# Display conversion history
+if len(st.session_state.conversion_history) > 0:
+    st.markdown("<h3 style='color: #33ff33;'>CONVERSION HISTORY</h3>", unsafe_allow_html=True)
+    
+    # Create a dataframe from conversion history
+    df = pd.DataFrame(st.session_state.conversion_history)
+    
+    # Display as table
+    st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+    st.table(df[["timestamp", "from_currency", "amount", "to_currency", "result"]])
+    st.markdown("</div>", unsafe_allow_html=True)</code></pre>
+        </div>
+        
+        <h2>Running The Application</h2>
+        
+        <div class="terminal">
+            <p class="command">$ python -m venv venv</p>
+            <p class="command">$ source venv/bin/activate</p>
+            <p class="command">$ pip install -r requirements.txt</p>
+            <p class="output">Successfully installed streamlit-1.30.0 pandas-2.1.4 requests-2.31.0 plotly-5.18.0 pillow-10.1.0 ...</p>
+            <p class="command">$ ./run.sh</p>
+            <p class="output">Starting the currency converter app...</p>
+            <p class="output">Streamlit server started on http://localhost:8501</p>
+        </div>
+        
+        <h2>Future Enhancements</h2>
+        
+        <div class="code-comparison">
+            <div class="code-column student-a">
+                <div class="student-label">Student A: Backend Improvements</div>
+                <ul>
+                    <li>Support for more currencies (50+)</li>
+                    <li>Historical exchange rate data</li>
+                    <li>Currency trend analysis</li>
+                    <li>Rate alerts for target thresholds</li>
+                    <li>Multiple API provider integration</li>
+                </ul>
+            </div>
+            
+            <div class="code-column student-b">
+                <div class="student-label">Student B: Frontend Enhancements</div>
+                <ul>
+                    <li>Additional retro themes/skins</li>
+                    <li>Interactive trend charts</li>
+                    <li>Mobile-responsive design</li>
+                    <li>Sound effects for actions</li>
+                    <li>Offline mode improvements</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Tool-Currency Project © 2025 | Licensed under MIT</p>
+            <p>Created with Streamlit, Python, and retrocomputing nostalgia</p>
+        </div>
+    </div>
+</body>
+</html>
