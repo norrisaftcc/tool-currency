@@ -1,3 +1,9 @@
+"""
+Tool-Currency Converter Application
+
+A retro-themed currency converter built with Streamlit, featuring a
+nostalgic 80s terminal interface and real-time currency conversion.
+"""
 import streamlit as st
 from datetime import datetime
 import json
@@ -15,7 +21,7 @@ from src.currency_utils import (
     convert_currency
 )
 
-# Set page configuration
+# Set page configuration with meaningful title and layout
 st.set_page_config(
     page_title="RetroComputer 8000 - Currency Converter",
     page_icon="💰",
@@ -23,8 +29,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Apply the retro styling with VT323 font and green-on-black theme
 def apply_terminal_style():
+    """
+    Apply retro-themed styling with VT323 font and green-on-black theme.
+    
+    Uses custom CSS with various retro effects like glowing text, scanlines,
+    and terminal-style UI elements.
+    """
     # CSS for enhanced 80s retro terminal look
     st.markdown("""
     <style>
@@ -227,8 +238,13 @@ def apply_terminal_style():
     </style>
     """, unsafe_allow_html=True)
 
-# Function to display system date and time
 def display_system_info():
+    """
+    Display a retro-styled system information box with current date and time.
+    
+    Returns:
+        str: Formatted ASCII art box with system information
+    """
     now = datetime.now()
     
     system_info = f"""
@@ -241,8 +257,90 @@ def display_system_info():
     
     return system_info
 
-# Main application function
+def create_history_table(conversion_history):
+    """
+    Create an HTML table displaying conversion history.
+    
+    Args:
+        conversion_history (list): List of conversion records
+        
+    Returns:
+        str: HTML table markup for the conversion history
+    """
+    table_html = """
+    <table class="currency-table">
+        <tr>
+            <th>Timestamp</th>
+            <th>From</th>
+            <th>Amount</th>
+            <th>To</th>
+            <th>Result</th>
+        </tr>
+    """
+    
+    # Add rows for each conversion
+    for conv in conversion_history:
+        # Add simple XSS protection by escaping values
+        timestamp = conv["timestamp"].replace("<", "&lt;").replace(">", "&gt;")
+        from_currency = conv["from_currency"].replace("<", "&lt;").replace(">", "&gt;")
+        to_currency = conv["to_currency"].replace("<", "&lt;").replace(">", "&gt;")
+        
+        table_html += f"""
+        <tr>
+            <td>{timestamp}</td>
+            <td>{from_currency}</td>
+            <td>{conv["amount"]:.2f}</td>
+            <td>{to_currency}</td>
+            <td>{conv["result"]:.2f}</td>
+        </tr>
+        """
+    
+    table_html += "</table>"
+    return table_html
+
+def create_rates_table(rates, currency_codes):
+    """
+    Create an HTML table displaying current exchange rates.
+    
+    Args:
+        rates (dict): Dictionary of exchange rates
+        currency_codes (list): List of valid currency codes
+        
+    Returns:
+        str: HTML table markup for the exchange rates
+    """
+    table_html = """
+    <table class="currency-table">
+        <tr>
+            <th>Currency</th>
+            <th>Rate</th>
+        </tr>
+    """
+    
+    # Add rows for each currency rate
+    for code, rate in rates.items():
+        if code in currency_codes:  # Only show rates for our defined currencies
+            # Get symbol with fallback to empty string
+            symbol = get_currency_symbol(code) or ""
+            # Add simple XSS protection
+            code_safe = code.replace("<", "&lt;").replace(">", "&gt;")
+            symbol_safe = symbol.replace("<", "&lt;").replace(">", "&gt;")
+            
+            table_html += f"""
+            <tr>
+                <td>{code_safe} ({symbol_safe})</td>
+                <td>{rate:.4f}</td>
+            </tr>
+            """
+    
+    table_html += "</table>"
+    return table_html
+
 def main():
+    """
+    Main application function that sets up the Streamlit interface and handles user interactions.
+    """
+    # Apply styling
     apply_terminal_style()
     
     # Initialize session state for conversion history
@@ -257,6 +355,14 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
+    # Get all available currencies - do this once at the beginning
+    currency_codes = get_currency_codes()
+    
+    # Check if we have any currencies
+    if not currency_codes:
+        st.error("ERROR: No currency data available. Please check the data files.")
+        return
+    
     # Main content area
     col1, col2 = st.columns([2, 1])
     
@@ -264,18 +370,33 @@ def main():
     with col1:
         st.markdown("<h2 style='color: #33ff33;'>CURRENCY EXCHANGE TERMINAL</h2>", unsafe_allow_html=True)
         
-        # Get all available currencies
-        currency_codes = get_currency_codes()
-        
         # Input for amount
-        amount = st.number_input("ENTER AMOUNT:", min_value=0.01, value=100.00, step=10.0)
+        amount = st.number_input(
+            "ENTER AMOUNT:", 
+            min_value=0.01, 
+            value=100.00, 
+            step=10.0,
+            help="Enter the amount you want to convert"
+        )
         
         # Select boxes for currencies
         col1a, col1b = st.columns(2)
         with col1a:
-            from_currency = st.selectbox("FROM CURRENCY:", currency_codes, index=0)
+            from_currency = st.selectbox(
+                "FROM CURRENCY:", 
+                currency_codes, 
+                index=0,
+                help="Select the source currency"
+            )
         with col1b:
-            to_currency = st.selectbox("TO CURRENCY:", currency_codes, index=1)
+            # Default to a different currency than the 'from' currency if possible
+            default_to_index = 1 if len(currency_codes) > 1 else 0
+            to_currency = st.selectbox(
+                "TO CURRENCY:", 
+                currency_codes, 
+                index=default_to_index,
+                help="Select the target currency"
+            )
         
         # Convert button
         if st.button("CONVERT CURRENCY"):
@@ -284,8 +405,8 @@ def main():
             
             if result is not None:
                 # Format the result
-                from_symbol = get_currency_symbol(from_currency)
-                to_symbol = get_currency_symbol(to_currency)
+                from_symbol = get_currency_symbol(from_currency) or ""
+                to_symbol = get_currency_symbol(to_currency) or ""
                 
                 # Display the result
                 st.markdown(f"""
@@ -294,7 +415,7 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Add to conversion history
+                # Add to conversion history (limit to last 10 for performance)
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 st.session_state.conversion_history.append({
                     "timestamp": timestamp,
@@ -303,91 +424,63 @@ def main():
                     "amount": amount,
                     "result": result
                 })
+                
+                # Keep only the last 10 conversions
+                if len(st.session_state.conversion_history) > 10:
+                    st.session_state.conversion_history = st.session_state.conversion_history[-10:]
             else:
                 st.error("CONVERSION ERROR: Could not retrieve exchange rate.")
         
-        # Exchange Rate Chart
+        # Conversion History Section
         if len(st.session_state.conversion_history) > 0:
             st.markdown("<h3 style='color: #33ff33;'>CONVERSION HISTORY</h3>", unsafe_allow_html=True)
             
             # Display conversion history as a simple table
             st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
             
-            # Create HTML table manually instead of using pandas
-            table_html = """
-            <table class="currency-table">
-                <tr>
-                    <th>Timestamp</th>
-                    <th>From</th>
-                    <th>Amount</th>
-                    <th>To</th>
-                    <th>Result</th>
-                </tr>
-            """
-            
-            # Add rows for each conversion
-            for conv in st.session_state.conversion_history:
-                table_html += f"""
-                <tr>
-                    <td>{conv["timestamp"]}</td>
-                    <td>{conv["from_currency"]}</td>
-                    <td>{conv["amount"]:.2f}</td>
-                    <td>{conv["to_currency"]}</td>
-                    <td>{conv["result"]:.2f}</td>
-                </tr>
-                """
-            
-            table_html += "</table>"
+            # Create HTML table
+            table_html = create_history_table(st.session_state.conversion_history)
             st.markdown(table_html, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Add clear history button
+            if st.button("CLEAR HISTORY"):
+                st.session_state.conversion_history = []
+                st.rerun()
     
     # Sidebar with exchange rates and settings
     with col2:
-        # Get exchange rates for USD
-        rates, last_update = get_exchange_rates("USD")
-        
-        st.markdown("<h3 style='color: #33ff33;'>CURRENT EXCHANGE RATES</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #33ff33;'>Base: USD | Last Update: {last_update}</p>", unsafe_allow_html=True)
-        
-        # Display exchange rates in a styled table
-        st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
-        
-        # Create HTML table manually instead of using pandas
-        table_html = """
-        <table class="currency-table">
-            <tr>
-                <th>Currency</th>
-                <th>Rate</th>
-            </tr>
-        """
-        
-        # Add rows for each currency rate
-        for code, rate in rates.items():
-            if code in currency_codes:  # Only show rates for our defined currencies
-                symbol = get_currency_symbol(code)
-                table_html += f"""
-                <tr>
-                    <td>{code} ({symbol})</td>
-                    <td>{rate:.4f}</td>
-                </tr>
-                """
-        
-        table_html += "</table>"
-        st.markdown(table_html, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        # System information display
-        st.markdown(f"<pre style='color: #33ff33; font-family: VT323, monospace;'>{display_system_info()}</pre>", unsafe_allow_html=True)
-        
-        # Add a retro "system stats" footer
-        st.markdown("""
-        <div class="system-stats">
-            <p>SYSTEM PERFORMANCE: NOMINAL</p>
-            <p>EXCHANGE DATA: ONLINE</p>
-            <p>CONNECTION: SECURE</p>
-            <p>(C) RETRO SYSTEMS INC. 2025</p>
-        </div>
-        """, unsafe_allow_html=True)
+        try:
+            # Get exchange rates for USD
+            rates, last_update = get_exchange_rates("USD")
+            
+            st.markdown("<h3 style='color: #33ff33;'>CURRENT EXCHANGE RATES</h3>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: #33ff33;'>Base: USD | Last Update: {last_update}</p>", unsafe_allow_html=True)
+            
+            # Display exchange rates in a styled table
+            st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+            
+            # Create rates table
+            table_html = create_rates_table(rates, currency_codes)
+            st.markdown(table_html, unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # System information display
+            st.markdown(f"<pre style='color: #33ff33; font-family: VT323, monospace;'>{display_system_info()}</pre>", unsafe_allow_html=True)
+            
+            # Add a retro "system stats" footer
+            st.markdown("""
+            <div class="system-stats">
+                <p>SYSTEM PERFORMANCE: NOMINAL</p>
+                <p>EXCHANGE DATA: ONLINE</p>
+                <p>CONNECTION: SECURE</p>
+                <p>(C) RETRO SYSTEMS INC. 2025</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        except Exception as error:
+            # Handle any unexpected errors in the sidebar
+            st.error(f"Error displaying exchange rates: {str(error)}")
 
 # Run the application
 if __name__ == "__main__":
