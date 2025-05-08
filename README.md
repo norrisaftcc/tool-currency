@@ -10,6 +10,14 @@ A retro-themed currency converter built with Streamlit, featuring a nostalgic 80
 - Conversion history tracking
 - Current exchange rates display
 
+## Simplified for ARM Compatibility
+
+This application has been simplified to work well on ARM architectures:
+- Minimal dependencies: only requires Streamlit and Requests
+- No heavy data processing libraries required
+- Uses native HTML for tables instead of DataFrames
+- Optimized for compatibility across platforms
+
 ## Installation
 
 1. Clone this repository:
@@ -63,6 +71,13 @@ A retro-themed currency converter built with Streamlit, featuring a nostalgic 80
 The application uses:
 - Sample exchange rates for demonstration
 - Open Exchange Rates API when connectivity is available
+
+## Troubleshooting
+
+If you encounter any issues:
+- Make sure you have the latest version of Streamlit installed
+- The application requires only basic libraries for maximum compatibility
+- For ARM-based systems, this version has been specifically optimized to avoid dependency issues
 
 ## License
 

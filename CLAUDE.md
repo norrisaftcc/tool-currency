@@ -53,6 +53,9 @@ streamlit run src/app.py
 
 ## Development Notes
 
+- The application has been simplified to have minimal dependencies for better compatibility with ARM architecture.
+- Only requires streamlit and requests libraries.
+- Uses native HTML tables instead of pandas DataFrames for better compatibility.
 - The application uses the Open Exchange Rates API for live exchange rates when available, with a fallback to sample data.
 - Styling is inspired by retro terminal interfaces, using the VT323 monospace font and a green-on-black color scheme.
 - The application stores conversion history in the session state, which is cleared when the app is restarted.

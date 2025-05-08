@@ -1,6 +1,4 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 from datetime import datetime
 import json
 import os
@@ -312,12 +310,35 @@ def main():
         if len(st.session_state.conversion_history) > 0:
             st.markdown("<h3 style='color: #33ff33;'>CONVERSION HISTORY</h3>", unsafe_allow_html=True)
             
-            # Create a dataframe from conversion history
-            df = pd.DataFrame(st.session_state.conversion_history)
-            
-            # Display as table
+            # Display conversion history as a simple table
             st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
-            st.table(df[["timestamp", "from_currency", "amount", "to_currency", "result"]])
+            
+            # Create HTML table manually instead of using pandas
+            table_html = """
+            <table class="currency-table">
+                <tr>
+                    <th>Timestamp</th>
+                    <th>From</th>
+                    <th>Amount</th>
+                    <th>To</th>
+                    <th>Result</th>
+                </tr>
+            """
+            
+            # Add rows for each conversion
+            for conv in st.session_state.conversion_history:
+                table_html += f"""
+                <tr>
+                    <td>{conv["timestamp"]}</td>
+                    <td>{conv["from_currency"]}</td>
+                    <td>{conv["amount"]:.2f}</td>
+                    <td>{conv["to_currency"]}</td>
+                    <td>{conv["result"]:.2f}</td>
+                </tr>
+                """
+            
+            table_html += "</table>"
+            st.markdown(table_html, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
     
     # Sidebar with exchange rates and settings
@@ -331,18 +352,28 @@ def main():
         # Display exchange rates in a styled table
         st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
         
-        # Create and display the rates table
-        rates_data = []
+        # Create HTML table manually instead of using pandas
+        table_html = """
+        <table class="currency-table">
+            <tr>
+                <th>Currency</th>
+                <th>Rate</th>
+            </tr>
+        """
+        
+        # Add rows for each currency rate
         for code, rate in rates.items():
             if code in currency_codes:  # Only show rates for our defined currencies
-                rates_data.append({
-                    "Currency": f"{code} ({get_currency_symbol(code)})",
-                    "Rate": f"{rate:.4f}"
-                })
+                symbol = get_currency_symbol(code)
+                table_html += f"""
+                <tr>
+                    <td>{code} ({symbol})</td>
+                    <td>{rate:.4f}</td>
+                </tr>
+                """
         
-        rates_df = pd.DataFrame(rates_data)
-        st.table(rates_df)
-        
+        table_html += "</table>"
+        st.markdown(table_html, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
         # System information display
