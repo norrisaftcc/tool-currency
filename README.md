@@ -66,6 +66,89 @@ This application has been simplified to work well on ARM architectures:
    - Track conversion history
    - Monitor current exchange rates
 
+## Deployment
+
+### Local Deployment
+
+For local deployment (beyond the development server):
+
+1. **Docker Deployment** (recommended for production):
+
+   Create a `Dockerfile` in the project root:
+   ```dockerfile
+   FROM python:3.9-slim
+
+   WORKDIR /app
+
+   COPY requirements.txt .
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   COPY . .
+
+   EXPOSE 8501
+
+   CMD ["streamlit", "run", "src/app.py"]
+   ```
+
+   Build and run the Docker container:
+   ```bash
+   docker build -t tool-currency .
+   docker run -p 8501:8501 tool-currency
+   ```
+
+2. **SystemD Service** (for Linux systems):
+
+   Create a service file at `/etc/systemd/system/tool-currency.service`:
+   ```
+   [Unit]
+   Description=Tool Currency Converter
+   After=network.target
+
+   [Service]
+   User=<your-user>
+   WorkingDirectory=/path/to/tool-currency
+   ExecStart=/path/to/tool-currency/venv/bin/streamlit run src/app.py
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   Enable and start the service:
+   ```bash
+   sudo systemctl enable tool-currency
+   sudo systemctl start tool-currency
+   ```
+
+### Streamlit Community Cloud Deployment
+
+To deploy to [Streamlit Community Cloud](https://streamlit.io/cloud) (free hosting):
+
+1. Push your repository to GitHub:
+   ```bash
+   git remote add origin https://github.com/yourusername/tool-currency.git
+   git push -u origin main
+   ```
+
+2. Sign up for a free account at [share.streamlit.io](https://share.streamlit.io/)
+
+3. Deploy your app:
+   - Click "New app" in the Streamlit Cloud dashboard
+   - Enter your GitHub repository URL
+   - Set the main file path to `src/app.py`
+   - Click "Deploy"
+
+4. Your app will be available at a URL like: `https://yourusername-tool-currency-src-app-xyz123.streamlit.app`
+
+5. **Important Configuration**:
+   - If your app needs secrets (like API keys), add them via the Streamlit Cloud dashboard:
+     1. Go to your app in the dashboard
+     2. Click on "Advanced settings" > "Secrets"
+     3. Add your secrets in TOML format:
+       ```toml
+       [openexchangerates]
+       api_key = "your_api_key_here"
+       ```
+
 ## Data Sources
 
 The application uses:
