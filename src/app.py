@@ -730,7 +730,8 @@ def main():
             
             # Create HTML table
             table_html = create_history_table(st.session_state.conversion_history)
-            st.markdown(table_html, unsafe_allow_html=True)
+            # Important: use st.write to render HTML properly, not st.markdown
+            st.write(table_html, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Add clear history button
@@ -752,7 +753,8 @@ def main():
             
             # Create rates table
             table_html = create_rates_table(rates, currency_codes)
-            st.markdown(table_html, unsafe_allow_html=True)
+            # Important: use st.write to render HTML properly, not st.markdown
+            st.write(table_html, unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # System information display
