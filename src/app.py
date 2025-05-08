@@ -211,29 +211,53 @@ def apply_terminal_style():
         padding: 15px;
         margin-top: 20px;
         box-shadow: 0 0 5px #33ff33;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    
+    /* Table wrapper */
+    .table-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+        margin-bottom: 10px;
     }
     
     /* Currency table */
     .currency-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 2px;
         font-family: 'VT323', monospace;
         font-size: 18px;
         margin-top: 20px;
+        table-layout: fixed;
+        overflow: hidden;
     }
     
     .currency-table th, .currency-table td {
         border: 1px solid #33ff33;
         padding: 8px;
         text-align: left;
+        background-color: rgba(0, 0, 0, 0.8);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     .currency-table th {
         background-color: #004400;
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
     
     .currency-table tr:hover {
         background-color: #004400;
+    }
+    
+    .currency-table tr:hover td {
+        background-color: #004400;
+        box-shadow: 0 0 5px #33ff33;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -268,14 +292,18 @@ def create_history_table(conversion_history):
         str: HTML table markup for the conversion history
     """
     table_html = """
+    <div class="table-wrapper">
     <table class="currency-table">
-        <tr>
-            <th>Timestamp</th>
-            <th>From</th>
-            <th>Amount</th>
-            <th>To</th>
-            <th>Result</th>
-        </tr>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Timestamp</th>
+                <th style="width: 15%;">From</th>
+                <th style="width: 20%;">Amount</th>
+                <th style="width: 15%;">To</th>
+                <th style="width: 25%;">Result</th>
+            </tr>
+        </thead>
+        <tbody>
     """
     
     # Add rows for each conversion
@@ -295,7 +323,11 @@ def create_history_table(conversion_history):
         </tr>
         """
     
-    table_html += "</table>"
+    table_html += """
+        </tbody>
+    </table>
+    </div>
+    """
     return table_html
 
 def create_rates_table(rates, currency_codes):
@@ -310,11 +342,15 @@ def create_rates_table(rates, currency_codes):
         str: HTML table markup for the exchange rates
     """
     table_html = """
+    <div class="table-wrapper">
     <table class="currency-table">
-        <tr>
-            <th>Currency</th>
-            <th>Rate</th>
-        </tr>
+        <thead>
+            <tr>
+                <th style="width: 60%;">Currency</th>
+                <th style="width: 40%;">Rate</th>
+            </tr>
+        </thead>
+        <tbody>
     """
     
     # Add rows for each currency rate
@@ -333,7 +369,11 @@ def create_rates_table(rates, currency_codes):
             </tr>
             """
     
-    table_html += "</table>"
+    table_html += """
+        </tbody>
+    </table>
+    </div>
+    """
     return table_html
 
 def main():
