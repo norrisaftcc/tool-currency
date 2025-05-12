@@ -13,13 +13,15 @@ import sys
 # Add the parent directory to sys.path to import from src
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.currency_utils import (
-    load_currencies, 
-    get_currency_codes, 
-    get_currency_name, 
+    load_currencies,
+    get_currency_codes,
+    get_currency_name,
     get_currency_symbol,
-    get_exchange_rates, 
+    get_exchange_rates,
+    get_historical_rates,
     convert_currency
 )
+import plotly.graph_objects as go
 
 # Initialize session state for theme preference
 if "theme" not in st.session_state:
@@ -218,6 +220,19 @@ def apply_retro_style():
         overflow-x: auto;
         max-width: 100%;
     }
+
+    /* Plotly chart styling overrides */
+    .js-plotly-plot .plotly .main-svg {
+        background-color: transparent !important;
+    }
+
+    .js-plotly-plot .plotly .modebar {
+        filter: invert(100%) sepia(90%) saturate(1000%) hue-rotate(70deg) brightness(150%) contrast(1000%);
+    }
+
+    .js-plotly-plot .plotly .modebar-btn:hover {
+        background-color: rgba(51, 255, 51, 0.3) !important;
+    }
     
     /* Table wrapper */
     .table-wrapper {
@@ -409,6 +424,11 @@ def apply_standard_style():
         overflow-x: auto;
         max-width: 100%;
     }
+
+    /* Plotly chart styling overrides for standard theme */
+    .js-plotly-plot .plotly .main-svg {
+        background-color: transparent !important;
+    }
     
     /* Table wrapper */
     .table-wrapper {
@@ -557,14 +577,77 @@ def create_history_table(conversion_history):
     """
     return table_html
 
+def create_historical_chart(base_currency, target_currency, days=30):
+    """
+    Create an interactive historical exchange rate chart using Plotly.
+
+    Args:
+        base_currency (str): The base currency code
+        target_currency (str): The target currency code
+        days (int): Number of days of historical data to display
+
+    Returns:
+        plotly.graph_objects.Figure: Interactive chart figure
+    """
+    # Get historical rates data with force_refresh from session state
+    force_refresh = st.session_state.get('force_refresh', False)
+    historical_data = get_historical_rates(base_currency, days, force_refresh=force_refresh)
+
+    # Prepare data for the chart
+    dates = []
+    rates = []
+
+    # Sort dates in ascending order
+    for date in sorted(historical_data.keys()):
+        if target_currency in historical_data[date]:
+            dates.append(date)
+            rates.append(historical_data[date][target_currency])
+
+    # Set colors based on theme
+    line_color = "#33ff33" if st.session_state.theme == "retro" else "#0d6efd"
+    bg_color = "black" if st.session_state.theme == "retro" else "white"
+    grid_color = "#004400" if st.session_state.theme == "retro" else "#e0e0e0"
+    text_color = "#33ff33" if st.session_state.theme == "retro" else "#212529"
+
+    # Create the figure
+    fig = go.Figure()
+
+    # Add the line trace
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=rates,
+            mode='lines+markers',
+            name=f'{base_currency} to {target_currency}',
+            line=dict(color=line_color, width=2),
+            marker=dict(size=6, color=line_color)
+        )
+    )
+
+    # Update layout for theme-appropriate styling
+    fig.update_layout(
+        title=f'Historical Exchange Rate: {base_currency} to {target_currency} (Last {days} Days)',
+        xaxis_title='Date',
+        yaxis_title=f'Rate (1 {base_currency} to {target_currency})',
+        plot_bgcolor=bg_color,
+        paper_bgcolor=bg_color,
+        font=dict(color=text_color, family="VT323, monospace" if st.session_state.theme == "retro" else "Roboto, sans-serif"),
+        xaxis=dict(gridcolor=grid_color, tickfont=dict(family="VT323, monospace" if st.session_state.theme == "retro" else "Roboto, sans-serif")),
+        yaxis=dict(gridcolor=grid_color, tickfont=dict(family="VT323, monospace" if st.session_state.theme == "retro" else "Roboto, sans-serif")),
+        margin=dict(t=50, b=50, l=50, r=50),
+        height=400,
+    )
+
+    return fig
+
 def create_rates_table(rates, currency_codes):
     """
     Create an HTML table displaying current exchange rates.
-    
+
     Args:
         rates (dict): Dictionary of exchange rates
         currency_codes (list): List of valid currency codes
-        
+
     Returns:
         str: HTML table markup for the exchange rates
     """
@@ -579,7 +662,7 @@ def create_rates_table(rates, currency_codes):
         </thead>
         <tbody>
     """
-    
+
     # Add rows for each currency rate
     for code, rate in rates.items():
         if code in currency_codes:  # Only show rates for our defined currencies
@@ -588,14 +671,14 @@ def create_rates_table(rates, currency_codes):
             # Add simple XSS protection
             code_safe = code.replace("<", "&lt;").replace(">", "&gt;")
             symbol_safe = symbol.replace("<", "&lt;").replace(">", "&gt;")
-            
+
             table_html += f"""
             <tr>
                 <td>{code_safe} ({symbol_safe})</td>
                 <td>{rate:.4f}</td>
             </tr>
             """
-    
+
     table_html += """
         </tbody>
     </table>
@@ -617,17 +700,53 @@ def main():
     """
     # Apply styling based on current theme
     apply_theme_style()
-    
+
     # Initialize session state for conversion history
     if "conversion_history" not in st.session_state:
         st.session_state.conversion_history = []
-    
-    # Theme toggle
-    col_toggle, col_spacer = st.columns([1, 5])
+
+    # Initialize online state detection
+    if "is_online" not in st.session_state:
+        # Check network connectivity
+        try:
+            requests.get("https://8.8.8.8", timeout=1)
+            st.session_state.is_online = True
+        except:
+            st.session_state.is_online = False
+
+    # Initialize force refresh setting
+    if "force_refresh" not in st.session_state:
+        st.session_state.force_refresh = False
+
+    # Top row with theme toggle and online status
+    col_toggle, col_status, col_refresh, col_spacer = st.columns([1, 1, 1, 3])
+
     with col_toggle:
         theme_label = "🌙 Retro" if st.session_state.theme == "retro" else "☀️ Standard"
         if st.button(f"Switch to {theme_label}", key="theme_toggle"):
             toggle_theme()
+
+    with col_status:
+        if st.session_state.is_online:
+            st.success("ONLINE MODE", icon="🌐")
+        else:
+            st.warning("OFFLINE MODE", icon="💾")
+
+    with col_refresh:
+        if st.button("🔄 Refresh Rates", key="refresh_rates"):
+            # Check network connectivity again when refresh is requested
+            try:
+                requests.get("https://8.8.8.8", timeout=1)
+                st.session_state.is_online = True
+                st.session_state.force_refresh = True
+                st.success("Refreshing rates from server...")
+            except:
+                st.session_state.is_online = False
+                st.warning("Unable to connect. Using cached rates.")
+
+    # Reset force refresh after it's been used
+    force_refresh = st.session_state.force_refresh
+    st.session_state.force_refresh = False
     
     # Header with styling based on theme
     if st.session_state.theme == "retro":
@@ -704,7 +823,7 @@ def main():
                     {from_symbol}{amount:.2f} {from_currency} = {to_symbol}{result:.2f} {to_currency}
                 </div>
                 """, unsafe_allow_html=True)
-                
+
                 # Add to conversion history (limit to last 10 for performance)
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 st.session_state.conversion_history.append({
@@ -714,10 +833,46 @@ def main():
                     "amount": amount,
                     "result": result
                 })
-                
+
                 # Keep only the last 10 conversions
                 if len(st.session_state.conversion_history) > 10:
                     st.session_state.conversion_history = st.session_state.conversion_history[-10:]
+
+                # Show historical chart
+                st.markdown("<h3 style='color: #33ff33;'>HISTORICAL EXCHANGE RATE</h3>", unsafe_allow_html=True)
+
+                # Add period selector for historical data
+                col_period, col_spacer = st.columns([1, 1])
+                with col_period:
+                    period = st.selectbox(
+                        "SELECT PERIOD:",
+                        ["7 days", "14 days", "30 days", "60 days"],
+                        index=2,  # Default to 30 days
+                        help="Select the historical period to display"
+                    )
+
+                # Convert period string to number of days
+                days = int(period.split()[0])
+
+                # Create and display historical chart
+                try:
+                    # Pass the force_refresh flag to the historical data function
+                    fig = create_historical_chart(from_currency, to_currency, days)
+                    st.plotly_chart(fig, use_container_width=True)
+
+                    # Add an appropriate note about data source based on online status
+                    if st.session_state.is_online:
+                        if st.session_state.theme == "retro":
+                            st.markdown("<p style='color: #33ff33; font-size: 14px; text-align: center;'>DATA SOURCE: ONLINE API WITH OFFLINE CACHE FALLBACK</p>", unsafe_allow_html=True)
+                        else:
+                            st.markdown("<p style='color: #6c757d; font-size: 14px; text-align: center;'>Data Source: Online API with offline cache fallback</p>", unsafe_allow_html=True)
+                    else:
+                        if st.session_state.theme == "retro":
+                            st.markdown("<p style='color: orange; font-size: 14px; text-align: center;'>OFFLINE MODE: USING CACHED DATA / SAMPLE DATA</p>", unsafe_allow_html=True)
+                        else:
+                            st.markdown("<p style='color: #fd7e14; font-size: 14px; text-align: center;'>Offline Mode: Using cached data / sample data</p>", unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error creating historical chart: {str(e)}")
             else:
                 st.error("CONVERSION ERROR: Could not retrieve exchange rate.")
         
@@ -742,15 +897,38 @@ def main():
     # Sidebar with exchange rates and settings
     with col2:
         try:
-            # Get exchange rates for USD
-            rates, last_update = get_exchange_rates("USD")
-            
-            st.markdown("<h3 style='color: #33ff33;'>CURRENT EXCHANGE RATES</h3>", unsafe_allow_html=True)
-            st.markdown(f"<p style='color: #33ff33;'>Base: USD | Last Update: {last_update}</p>", unsafe_allow_html=True)
-            
+            # Get exchange rates for USD, respecting force_refresh flag
+            rates, last_update = get_exchange_rates("USD", force_refresh=force_refresh)
+
+            # Format the heading based on the theme
+            if st.session_state.theme == "retro":
+                st.markdown("<h3 style='color: #33ff33;'>CURRENT EXCHANGE RATES</h3>", unsafe_allow_html=True)
+
+                # Parse last_update to show appropriate status
+                if "(cached)" in last_update:
+                    st.markdown(f"<p style='color: #33ff33;'>Base: USD | Source: Cache | {last_update.replace(' (cached)', '')}</p>", unsafe_allow_html=True)
+                elif "(offline mode)" in last_update:
+                    st.markdown(f"<p style='color: orange;'>Base: USD | Source: Cache (OFFLINE) | {last_update.replace(' (offline mode)', '')}</p>", unsafe_allow_html=True)
+                elif "(sample data)" in last_update:
+                    st.markdown(f"<p style='color: orange;'>Base: USD | Source: Sample Data | {last_update.replace(' (sample data)', '')}</p>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<p style='color: #33ff33;'>Base: USD | Source: API | {last_update}</p>", unsafe_allow_html=True)
+            else:
+                st.markdown("<h3>Current Exchange Rates</h3>", unsafe_allow_html=True)
+
+                # Parse last_update to show appropriate status (standard theme)
+                if "(cached)" in last_update:
+                    st.markdown(f"<p style='color: #6c757d;'>Base: USD | Source: Cache | {last_update.replace(' (cached)', '')}</p>", unsafe_allow_html=True)
+                elif "(offline mode)" in last_update:
+                    st.markdown(f"<p style='color: #fd7e14;'>Base: USD | Source: Cache (OFFLINE) | {last_update.replace(' (offline mode)', '')}</p>", unsafe_allow_html=True)
+                elif "(sample data)" in last_update:
+                    st.markdown(f"<p style='color: #fd7e14;'>Base: USD | Source: Sample Data | {last_update.replace(' (sample data)', '')}</p>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<p style='color: #6c757d;'>Base: USD | Source: API | {last_update}</p>", unsafe_allow_html=True)
+
             # Display exchange rates in a styled table
             st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
-            
+
             # Create rates table
             table_html = create_rates_table(rates, currency_codes)
             # Important: use st.write to render HTML properly, not st.markdown

@@ -3,3 +3,4 @@
 
 **/.claude/settings.local.json
 /src/__pycache__
+data/cache/*.json
